@@ -141,8 +141,8 @@ void sgw_state_operational(ogs_fsm_t *s, sgw_event_t *e)
             if (message.h.teid == 0) {
                 ogs_assert(!sgw_ue);
                 sgw_ue = sgw_ue_add_by_message(&message);
-                ogs_assert(sgw_ue);
-                OGS_SETUP_GTP_NODE(sgw_ue, gnode);
+                if (sgw_ue)
+                    OGS_SETUP_GTP_NODE(sgw_ue, gnode);
             }
             sgw_s11_handle_create_session_request(xact, sgw_ue,
                     &message);

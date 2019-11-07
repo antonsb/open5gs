@@ -577,6 +577,7 @@ sgw_sess_t* sgw_sess_find_by_teid(uint32_t teid)
 sgw_sess_t* sgw_sess_find_by_apn(sgw_ue_t *sgw_ue, char *apn)
 {
     sgw_sess_t *sess = NULL;
+    ogs_assert(sgw_ue);
     
     sess = sgw_sess_first(sgw_ue);
     while (sess) {
@@ -592,6 +593,7 @@ sgw_sess_t* sgw_sess_find_by_apn(sgw_ue_t *sgw_ue, char *apn)
 sgw_sess_t* sgw_sess_find_by_ebi(sgw_ue_t *sgw_ue, uint8_t ebi)
 {
     sgw_bearer_t *bearer = NULL;
+    ogs_assert(sgw_ue);
 
     bearer = sgw_bearer_find_by_ue_ebi(sgw_ue, ebi);
     if (bearer)
@@ -602,11 +604,13 @@ sgw_sess_t* sgw_sess_find_by_ebi(sgw_ue_t *sgw_ue, uint8_t ebi)
 
 sgw_sess_t* sgw_sess_first(sgw_ue_t *sgw_ue)
 {
+    ogs_assert(sgw_ue);
     return ogs_list_first(&sgw_ue->sess_list);
 }
 
 sgw_sess_t* sgw_sess_next(sgw_sess_t *sess)
 {
+    ogs_assert(sess);
     return ogs_list_next(sess);
 }
 

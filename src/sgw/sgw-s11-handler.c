@@ -25,6 +25,8 @@
 void sgw_s11_handle_create_session_request(ogs_gtp_xact_t *s11_xact,
         sgw_ue_t *sgw_ue, ogs_gtp_message_t *message)
 {
+    ogs_gtp_cause_t cause;
+
     int rv;
     uint16_t decoded;
     ogs_gtp_create_session_request_t *req = NULL;
@@ -50,16 +52,71 @@ void sgw_s11_handle_create_session_request(ogs_gtp_xact_t *s11_xact,
 
     ogs_debug("[SGW] Create Session Request");
 
+    memset(&cause, 0, sizeof cause);
+
+    if (!sgw_ue) {
+        ogs_warn("No Context");
+        cause.value = OGS_GTP_CAUSE_CONTEXT_NOT_FOUND;
+    }
+
+    if (req->imsi.presence == 0) {
+        ogs_error("No IMSI");
+        cause.value = OGS_GTP_CAUSE_MANDATORY_IE_MISSING;
+    }
     if (req->bearer_contexts_to_be_created.presence == 0) {
         ogs_error("No Bearer");
-        return;
+        cause.value = OGS_GTP_CAUSE_MANDATORY_IE_MISSING;
     }
     if (req->bearer_contexts_to_be_created.eps_bearer_id.presence == 0) {
         ogs_error("No EPS Bearer ID");
+        cause.value = OGS_GTP_CAUSE_MANDATORY_IE_MISSING;
+    }
+    if (req->access_point_name.presence == 0) {
+        ogs_error("No APN");
+        cause.value = OGS_GTP_CAUSE_MANDATORY_IE_MISSING;
+    }
+    if (req->sender_f_teid_for_control_plane.presence == 0) {
+        ogs_error("No Sender F-TEID");
+        cause.value = OGS_GTP_CAUSE_MANDATORY_IE_MISSING;
+    }
+    if (req->pgw_s5_s8_address_for_control_plane_or_pmip.presence == 0) {
+        ogs_error("No PGW IP");
+        cause.value = OGS_GTP_CAUSE_MANDATORY_IE_MISSING;
+    }
+    if (req->user_location_information.presence == 0) {
+        ogs_error("No User Location Inforamtion");
+        cause.value = OGS_GTP_CAUSE_MANDATORY_IE_MISSING;
+    }
+
+    if (cause.value) {
+        ogs_gtp_message_t errmsg;
+        ogs_gtp_create_session_response_t *rsp = NULL;
+
+        ogs_debug("[SGW] Create Session Response");
+
+        rsp = &errmsg.create_session_response;
+        memset(&errmsg, 0, sizeof(ogs_gtp_message_t));
+
+        /* Set Cause */
+        rsp->cause.presence = 1;
+        rsp->cause.len = sizeof(cause);
+        rsp->cause.data = &cause;
+
+        errmsg.h.type = OGS_GTP_CREATE_SESSION_RESPONSE_TYPE;
+        if (sgw_ue)
+            errmsg.h.teid = sgw_ue->mme_s11_teid;
+        rv = ogs_gtp_build_msg(&pkbuf, &errmsg);
+        ogs_assert(rv == OGS_OK);
+
+        rv = ogs_gtp_xact_update_tx(s11_xact, &errmsg.h, pkbuf);
+        ogs_assert(rv == OGS_OK);
+
+        rv = ogs_gtp_xact_commit(s11_xact);
+        ogs_assert(rv == OGS_OK);
+
         return;
     }
 
-    ogs_assert(sgw_ue);
     sess = sgw_sess_find_by_ebi(sgw_ue,
             req->bearer_contexts_to_be_created.eps_bearer_id.u8);
     if (sess) {
@@ -68,29 +125,11 @@ void sgw_s11_handle_create_session_request(ogs_gtp_xact_t *s11_xact,
         sgw_sess_remove(sess);
     }
 
-    if (req->access_point_name.presence == 0) {
-        ogs_error("No APN");
-        return;
-    }
-
     ogs_fqdn_parse(apn,
             req->access_point_name.data, req->access_point_name.len);
     sess = sgw_sess_add(sgw_ue, apn,
             req->bearer_contexts_to_be_created.eps_bearer_id.u8);
     ogs_assert(sess);
-
-    if (req->sender_f_teid_for_control_plane.presence == 0) {
-        ogs_error("No Sender F-TEID");
-        return;
-    }
-    if (req->pgw_s5_s8_address_for_control_plane_or_pmip.presence == 0) {
-        ogs_error("No PGW IP");
-        return;
-    }
-    if (req->user_location_information.presence == 0) {
-        ogs_error("No User Location Inforamtion");
-        return;
-    }
 
     bearer = sgw_default_bearer_in_sess(sess);
     ogs_assert(bearer);
@@ -178,6 +217,8 @@ void sgw_s11_handle_create_session_request(ogs_gtp_xact_t *s11_xact,
 void sgw_s11_handle_modify_bearer_request(ogs_gtp_xact_t *s11_xact,
     sgw_ue_t *sgw_ue, ogs_gtp_modify_bearer_request_t *req)
 {
+    ogs_gtp_cause_t cause;
+
     int rv;
     char buf[OGS_ADDRSTRLEN];
 
@@ -189,46 +230,49 @@ void sgw_s11_handle_modify_bearer_request(ogs_gtp_xact_t *s11_xact,
     ogs_pkbuf_t *pkbuf = NULL;
     ogs_gtp_message_t message;
     
-    ogs_gtp_cause_t cause;
     ogs_gtp_f_teid_t *enb_s1u_teid = NULL;
     ogs_gtp_uli_t uli;
 
     ogs_assert(s11_xact);
-    ogs_assert(sgw_ue);
     ogs_assert(req);
 
     ogs_debug("[SGW] Modify Bearer Reqeust");
-    if (req->bearer_contexts_to_be_modified.presence == 0) {
-        ogs_error("No Bearer");
-        return;
-    }
-    if (req->bearer_contexts_to_be_modified.eps_bearer_id.presence == 0) {
-        ogs_error("No EPS Bearer ID");
-        return;
-    }
-    if (req->bearer_contexts_to_be_modified.s1_u_enodeb_f_teid.presence == 0) {
-        ogs_error("No eNB TEID");
-        return;
-    }
 
     rsp = &message.modify_bearer_response;
 
     memset(&message, 0, sizeof(ogs_gtp_message_t));
     message.h.type = OGS_GTP_MODIFY_BEARER_RESPONSE_TYPE;
-    message.h.teid = sgw_ue->mme_s11_teid;
+    if (sgw_ue)
+        message.h.teid = sgw_ue->mme_s11_teid;
 
     memset(&cause, 0, sizeof(cause));
     rsp->cause.presence = 1;
     rsp->cause.data = &cause;
     rsp->cause.len = sizeof(cause);
 
-    bearer = sgw_bearer_find_by_ue_ebi(sgw_ue, 
-                req->bearer_contexts_to_be_modified.eps_bearer_id.u8);
-
-    if (!bearer) {
-        cause.value = OGS_GTP_CAUSE_CONTEXT_NOT_FOUND;
-
+    if (req->bearer_contexts_to_be_modified.presence == 0) {
+        ogs_error("No Bearer");
+        cause.value = OGS_GTP_CAUSE_MANDATORY_IE_MISSING;
     } else {
+        if (sgw_ue) {
+            bearer = sgw_bearer_find_by_ue_ebi(sgw_ue,
+                        req->bearer_contexts_to_be_modified.eps_bearer_id.u8);
+        } 
+        if (!bearer) {
+            ogs_warn("No Context");
+            cause.value = OGS_GTP_CAUSE_CONTEXT_NOT_FOUND;
+        }
+    }
+    if (req->bearer_contexts_to_be_modified.eps_bearer_id.presence == 0) {
+        ogs_error("No EPS Bearer ID");
+        cause.value = OGS_GTP_CAUSE_MANDATORY_IE_MISSING;
+    }
+    if (req->bearer_contexts_to_be_modified.s1_u_enodeb_f_teid.presence == 0) {
+        ogs_error("No eNB TEID");
+        cause.value = OGS_GTP_CAUSE_MANDATORY_IE_MISSING;
+    }
+
+    if (bearer) {
         s1u_tunnel = sgw_s1u_tunnel_in_bearer(bearer);
         ogs_assert(s1u_tunnel);
 
@@ -334,6 +378,8 @@ void sgw_s11_handle_modify_bearer_request(ogs_gtp_xact_t *s11_xact,
 void sgw_s11_handle_delete_session_request(ogs_gtp_xact_t *s11_xact,
     sgw_ue_t *sgw_ue, ogs_gtp_message_t *message)
 {
+    ogs_gtp_cause_t cause;
+
     int rv;
     ogs_pkbuf_t *pkbuf = NULL;
     ogs_gtp_xact_t *s5c_xact = NULL;
@@ -341,15 +387,51 @@ void sgw_s11_handle_delete_session_request(ogs_gtp_xact_t *s11_xact,
     ogs_gtp_delete_session_request_t *req = NULL;
 
     ogs_assert(s11_xact);
-    ogs_assert(sgw_ue);
     ogs_assert(message);
 
     req = &message->delete_session_request;
     ogs_assert(req);
 
     ogs_debug("[SGW] Delete Session Reqeust");
+
+    memset(&cause, 0, sizeof cause);
+
+    if (!sgw_ue) {
+        ogs_warn("No Context");
+        cause.value = OGS_GTP_CAUSE_CONTEXT_NOT_FOUND;
+    }
+
     if (req->linked_eps_bearer_id.presence == 0) {
         ogs_error("No EPS Bearer ID");
+        cause.value = OGS_GTP_CAUSE_MANDATORY_IE_MISSING;
+    }
+
+    if (cause.value) {
+        ogs_gtp_message_t errmsg;
+        ogs_gtp_delete_session_response_t *rsp = NULL;
+
+        ogs_debug("[SGW] Delete Session Response");
+
+        rsp = &errmsg.delete_session_response;
+        memset(&errmsg, 0, sizeof(ogs_gtp_message_t));
+
+        /* Set Cause */
+        rsp->cause.presence = 1;
+        rsp->cause.len = sizeof(cause);
+        rsp->cause.data = &cause;
+
+        errmsg.h.type = OGS_GTP_DELETE_SESSION_RESPONSE_TYPE;
+        if (sgw_ue)
+            errmsg.h.teid = sgw_ue->mme_s11_teid;
+        rv = ogs_gtp_build_msg(&pkbuf, &errmsg);
+        ogs_assert(rv == OGS_OK);
+
+        rv = ogs_gtp_xact_update_tx(s11_xact, &errmsg.h, pkbuf);
+        ogs_assert(rv == OGS_OK);
+
+        rv = ogs_gtp_xact_commit(s11_xact);
+        ogs_assert(rv == OGS_OK);
+
         return;
     }
 
@@ -637,48 +719,54 @@ void sgw_s11_handle_release_access_bearers_request(ogs_gtp_xact_t *s11_xact,
     
     ogs_gtp_cause_t cause;
 
-    ogs_assert(sgw_ue);
     ogs_assert(s11_xact);
     ogs_assert(req);
 
     ogs_debug("[SGW] Release Access Bearers Request");
-    ogs_debug("    MME_S11_TEID[%d] SGW_S11_TEID[%d]",
-        sgw_ue->mme_s11_teid, sgw_ue->sgw_s11_teid);
-    /* Set UE state to S1UE_INACTIVE */
-    SGW_SET_UE_STATE(sgw_ue, SGW_S1U_INACTIVE);
-    /* ReSet UE state to S1UE_INACTIVE */
-    SGW_RESET_UE_STATE(sgw_ue, SGW_DL_NOTI_SENT);
-
-    /* Release S1U(DL) path */
-    sess = sgw_sess_first(sgw_ue);
-    while (sess) {
-        bearer = ogs_list_first(&sess->bearer_list);
-        while (bearer) {
-            next_bearer = ogs_list_next(bearer);
-
-            s1u_tunnel = sgw_s1u_tunnel_in_bearer(bearer);
-            ogs_assert(s1u_tunnel);
-
-            s1u_tunnel->remote_teid = 0;
-
-            bearer = next_bearer;
-        }
-
-        sess = sgw_sess_next(sess);
-    }
 
     rsp = &message.release_access_bearers_response;
+
     memset(&message, 0, sizeof(ogs_gtp_message_t));
+    message.h.type = OGS_GTP_RELEASE_ACCESS_BEARERS_RESPONSE_TYPE;
+    if (sgw_ue)
+        message.h.teid = sgw_ue->mme_s11_teid;
 
     memset(&cause, 0, sizeof(cause));
-    cause.value = OGS_GTP_CAUSE_REQUEST_ACCEPTED;
-
     rsp->cause.presence = 1;
     rsp->cause.data = &cause;
     rsp->cause.len = sizeof(cause);
 
-    message.h.type = OGS_GTP_RELEASE_ACCESS_BEARERS_RESPONSE_TYPE;
-    message.h.teid = sgw_ue->mme_s11_teid;
+    if (!sgw_ue) {
+        ogs_warn("No Context");
+        cause.value = OGS_GTP_CAUSE_CONTEXT_NOT_FOUND;
+    } else {
+        ogs_debug("    MME_S11_TEID[%d] SGW_S11_TEID[%d]",
+            sgw_ue->mme_s11_teid, sgw_ue->sgw_s11_teid);
+        /* Set UE state to S1UE_INACTIVE */
+        SGW_SET_UE_STATE(sgw_ue, SGW_S1U_INACTIVE);
+        /* ReSet UE state to S1UE_INACTIVE */
+        SGW_RESET_UE_STATE(sgw_ue, SGW_DL_NOTI_SENT);
+
+        /* Release S1U(DL) path */
+        sess = sgw_sess_first(sgw_ue);
+        while (sess) {
+            bearer = ogs_list_first(&sess->bearer_list);
+            while (bearer) {
+                next_bearer = ogs_list_next(bearer);
+
+                s1u_tunnel = sgw_s1u_tunnel_in_bearer(bearer);
+                ogs_assert(s1u_tunnel);
+
+                s1u_tunnel->remote_teid = 0;
+
+                bearer = next_bearer;
+            }
+
+            sess = sgw_sess_next(sess);
+        }
+
+        cause.value = OGS_GTP_CAUSE_REQUEST_ACCEPTED;
+    }
 
     rv = ogs_gtp_build_msg(&pkbuf, &message);
     ogs_assert(rv == OGS_OK);
