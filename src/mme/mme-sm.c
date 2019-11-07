@@ -112,9 +112,9 @@ void mme_state_operational(ogs_fsm_t *s, mme_event_t *e)
         break;
 
     case MME_EVT_S1AP_LO_ACCEPT:
-        sock = e->sctp_sock;
+        sock = e->sock;
         ogs_assert(sock);
-        addr = e->sctp_addr;
+        addr = e->addr;
         ogs_assert(addr);
 
         ogs_info("eNB-S1 accepted[%s] in master_sm module", 
@@ -134,9 +134,9 @@ void mme_state_operational(ogs_fsm_t *s, mme_event_t *e)
         break;
 
     case MME_EVT_S1AP_LO_SCTP_COMM_UP:
-        sock = e->sctp_sock;
+        sock = e->sock;
         ogs_assert(sock);
-        addr = e->sctp_addr;
+        addr = e->addr;
         ogs_assert(addr);
 
         max_num_of_ostreams = e->max_num_of_ostreams;
@@ -158,9 +158,9 @@ void mme_state_operational(ogs_fsm_t *s, mme_event_t *e)
         break;
 
     case MME_EVT_S1AP_LO_CONNREFUSED:
-        sock = e->sctp_sock;
+        sock = e->sock;
         ogs_assert(sock);
-        addr = e->sctp_addr;
+        addr = e->addr;
         ogs_assert(addr);
 
         enb = mme_enb_find_by_addr(addr);
@@ -177,9 +177,9 @@ void mme_state_operational(ogs_fsm_t *s, mme_event_t *e)
 
         break;
     case MME_EVT_S1AP_MESSAGE:
-        sock = e->sctp_sock;
+        sock = e->sock;
         ogs_assert(sock);
-        addr = e->sctp_addr;
+        addr = e->addr;
         ogs_assert(addr);
         pkbuf = e->pkbuf;
         ogs_assert(pkbuf);
@@ -495,9 +495,9 @@ void mme_state_operational(ogs_fsm_t *s, mme_event_t *e)
         break;
 
     case MME_EVT_SGSAP_LO_SCTP_COMM_UP:
-        sock = e->sctp_sock;
+        sock = e->sock;
         ogs_assert(sock);
-        addr = e->sctp_addr;
+        addr = e->addr;
         ogs_assert(addr);
 
         max_num_of_ostreams = e->max_num_of_ostreams;
@@ -519,9 +519,9 @@ void mme_state_operational(ogs_fsm_t *s, mme_event_t *e)
         break;
 
     case MME_EVT_SGSAP_LO_CONNREFUSED:
-        sock = e->sctp_sock;
+        sock = e->sock;
         ogs_assert(sock);
-        addr = e->sctp_addr;
+        addr = e->addr;
         ogs_assert(addr);
 
         vlr = mme_vlr_find_by_addr(addr);
@@ -544,9 +544,9 @@ void mme_state_operational(ogs_fsm_t *s, mme_event_t *e)
 
         break;
     case MME_EVT_SGSAP_MESSAGE:
-        sock = e->sctp_sock;
+        sock = e->sock;
         ogs_assert(sock);
-        addr = e->sctp_addr;
+        addr = e->addr;
         ogs_assert(addr);
         pkbuf = e->pkbuf;
         ogs_assert(pkbuf);

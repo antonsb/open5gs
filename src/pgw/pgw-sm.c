@@ -50,10 +50,8 @@ void pgw_state_operational(ogs_fsm_t *s, pgw_event_t *e)
     ogs_gtp_xact_t *xact = NULL;
     ogs_gtp_message_t *message = NULL;
     pgw_sess_t *sess = NULL;
-    ogs_index_t sess_index;
     ogs_pkbuf_t *gxbuf = NULL;
     ogs_diam_gx_message_t *gx_message = NULL;
-    uint32_t xact_index;
     ogs_pkbuf_t *gtpbuf = NULL;
 
     pgw_sm_debug(e);
@@ -144,15 +142,12 @@ void pgw_state_operational(ogs_fsm_t *s, pgw_event_t *e)
         gx_message = (ogs_diam_gx_message_t *)gxbuf->data;
         ogs_assert(gx_message);
 
-        sess_index = e->sess_index;
-        ogs_assert(sess_index);
-        sess = pgw_sess_find(sess_index);
+        sess = e->sess;
+        ogs_assert(sess);
 
         switch(gx_message->cmd_code) {
         case OGS_DIAM_GX_CMD_CODE_CREDIT_CONTROL:
-            xact_index = e->xact_index;
-            ogs_assert(xact_index);
-            xact = ogs_gtp_xact_find(xact_index);
+            xact = e->xact;
             ogs_assert(xact);
 
             gtpbuf = e->gtpbuf;
