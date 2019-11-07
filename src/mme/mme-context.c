@@ -1675,6 +1675,21 @@ void mme_sgw_remove_all()
         mme_sgw_remove(sgw);
 }
 
+mme_sgw_t *mme_sgw_find_by_addr(ogs_sockaddr_t *addr)
+{
+    mme_sgw_t *sgw = NULL;
+
+    ogs_assert(addr);
+
+    ogs_list_for_each(&self.sgw_list, sgw) {
+        ogs_assert(sgw->gnode);
+        if (ogs_sockaddr_is_equal(&sgw->gnode->remote_addr, addr) == true)
+            break;
+    }
+
+    return sgw;
+}
+
 mme_pgw_t *mme_pgw_add(ogs_sockaddr_t *addr)
 {
     mme_pgw_t *pgw = NULL;

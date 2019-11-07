@@ -113,6 +113,22 @@ void ogs_gtp_node_remove_all(ogs_list_t *list)
         ogs_gtp_node_remove(list, node);
 }
 
+ogs_gtp_node_t *ogs_gtp_node_find_by_addr(
+        ogs_list_t *list, ogs_sockaddr_t *addr)
+{
+    ogs_gtp_node_t *node = NULL;
+
+    ogs_assert(list);
+    ogs_assert(addr);
+
+    ogs_list_for_each(list, node) {
+        if (ogs_sockaddr_is_equal(&node->remote_addr, addr) == true)
+            break;
+    }
+
+    return node;
+}
+
 ogs_gtp_node_t *ogs_gtp_node_find_by_f_teid(
         ogs_list_t *list, ogs_gtp_f_teid_t *f_teid)
 {

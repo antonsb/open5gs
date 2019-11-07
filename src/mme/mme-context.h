@@ -645,6 +645,7 @@ int mme_context_parse_config(void);
 mme_sgw_t *mme_sgw_add(ogs_sockaddr_t *addr);
 void mme_sgw_remove(mme_sgw_t *sgw);
 void mme_sgw_remove_all(void);
+mme_sgw_t *mme_sgw_find_by_addr(ogs_sockaddr_t *addr);
 
 mme_pgw_t *mme_pgw_add(ogs_sockaddr_t *addr);
 void mme_pgw_remove(mme_pgw_t *pgw);

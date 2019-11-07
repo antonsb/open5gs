@@ -63,6 +63,8 @@ ogs_gtp_node_t *ogs_gtp_node_add(
 void ogs_gtp_node_remove(ogs_list_t *list, ogs_gtp_node_t *node);
 void ogs_gtp_node_remove_all(ogs_list_t *list);
 
+ogs_gtp_node_t *ogs_gtp_node_find_by_addr(
+        ogs_list_t *list, ogs_sockaddr_t *addr);
 ogs_gtp_node_t *ogs_gtp_node_find_by_f_teid(
         ogs_list_t *list, ogs_gtp_f_teid_t *f_teid);
 

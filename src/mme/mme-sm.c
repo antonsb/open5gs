@@ -58,6 +58,7 @@ void mme_state_operational(ogs_fsm_t *s, mme_event_t *e)
     ogs_sockaddr_t *addr = NULL;
     mme_enb_t *enb = NULL;
     uint16_t max_num_of_ostreams = 0;
+    mme_sgw_t *sgw = NULL;
 
     s1ap_message_t s1ap_message;
     ogs_pkbuf_t *pkbuf = NULL;
@@ -74,6 +75,7 @@ void mme_state_operational(ogs_fsm_t *s, mme_event_t *e)
     ogs_pkbuf_t *s6abuf = NULL;
     ogs_diam_s6a_message_t *s6a_message = NULL;
 
+    ogs_gtp_node_t *gnode = NULL;
     ogs_gtp_xact_t *xact = NULL;
     ogs_gtp_message_t gtp_message;
 
@@ -418,14 +420,21 @@ void mme_state_operational(ogs_fsm_t *s, mme_event_t *e)
         rv = ogs_gtp_parse_msg(&gtp_message, pkbuf);
         ogs_assert(rv == OGS_OK);
 
-        addr = e->addr;
-        ogs_assert(addr);
+        if (gtp_message.h.teid) {
+            mme_ue = mme_ue_find_by_teid(gtp_message.h.teid);
+        }
+        if (mme_ue) {
+            gnode = mme_ue->gnode;
+        } else {
+            ogs_assert(e->addr);
+            sgw = mme_sgw_find_by_addr(e->addr);
+            ogs_assert(sgw);
+            gnode = sgw->gnode;
+        }
         ogs_free(e->addr);
+        ogs_assert(gnode);
 
-        mme_ue = mme_ue_find_by_teid(gtp_message.h.teid);
-        ogs_assert(mme_ue);
-
-        rv = ogs_gtp_xact_receive(mme_ue->gnode, &gtp_message.h, &xact);
+        rv = ogs_gtp_xact_receive(gnode, &gtp_message.h, &xact);
         if (rv != OGS_OK) {
             ogs_pkbuf_free(pkbuf);
             break;
