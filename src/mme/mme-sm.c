@@ -420,7 +420,7 @@ void mme_state_operational(ogs_fsm_t *s, mme_event_t *e)
         rv = ogs_gtp_parse_msg(&gtp_message, pkbuf);
         ogs_assert(rv == OGS_OK);
 
-        /* 
+        /*
          * 5.5.2 in spec 29.274
          *
          * If a peer's TEID is not available, the TEID field still shall be
