@@ -396,37 +396,6 @@ int sgw_context_parse_config(void)
     return OGS_OK;
 }
 
-ogs_gtp_node_t *sgw_mme_add_by_message(ogs_gtp_message_t *message)
-{
-    int rv;
-    ogs_gtp_node_t *mme = NULL;
-    ogs_gtp_f_teid_t *mme_s11_teid = NULL;
-    ogs_gtp_create_session_request_t *req = &message->create_session_request;
-
-    if (req->sender_f_teid_for_control_plane.presence == 0) {
-        ogs_error("No Sender F-TEID");
-        return NULL;
-    }
-
-    mme_s11_teid = req->sender_f_teid_for_control_plane.data;
-    ogs_assert(mme_s11_teid);
-    mme = ogs_gtp_node_find_by_f_teid(&sgw_self()->mme_s11_list, mme_s11_teid);
-    if (!mme) {
-        mme = ogs_gtp_node_add(&sgw_self()->mme_s11_list, mme_s11_teid,
-            sgw_self()->gtpc_port,
-            ogs_config()->parameter.no_ipv4,
-            ogs_config()->parameter.no_ipv6,
-            ogs_config()->parameter.prefer_ipv4);
-        ogs_assert(mme);
-
-        rv = ogs_gtp_connect(
-                sgw_self()->gtpc_sock, sgw_self()->gtpc_sock6, mme);
-        ogs_assert(rv == OGS_OK);
-    }
-
-    return mme;
-}
-
 sgw_ue_t *sgw_ue_add_by_message(ogs_gtp_message_t *message)
 {
     sgw_ue_t *sgw_ue = NULL;
@@ -441,7 +410,7 @@ sgw_ue_t *sgw_ue_add_by_message(ogs_gtp_message_t *message)
     ogs_log_hexdump(OGS_LOG_TRACE, req->imsi.data, req->imsi.len);
 
     /* 
-     * 3GPP TS 29.274 Release 15, Page 38
+     * 7.2.1 in 3GPP TS 29.274 Release 15
      *
      * If the new Create Session Request received by the SGW collides with
      * an existing active PDN connection context (the existing PDN connection
