@@ -49,6 +49,7 @@ void sgw_state_operational(ogs_fsm_t *s, sgw_event_t *e)
     sgw_ue_t *sgw_ue = NULL;
     sgw_sess_t *sess = NULL;
     sgw_bearer_t *bearer = NULL;
+    ogs_sockaddr_t *addr = NULL;
 
     sgw_sm_debug(e);
 
@@ -71,6 +72,10 @@ void sgw_state_operational(ogs_fsm_t *s, sgw_event_t *e)
         ogs_assert(pkbuf);
         rv = ogs_gtp_parse_msg(&message, pkbuf);
         ogs_assert(rv == OGS_OK);
+
+        addr = e->addr;
+        ogs_assert(addr);
+        ogs_free(e->addr);
 
         if (message.h.teid == 0) {
             ogs_gtp_node_t *mme = sgw_mme_add_by_message(&message);
@@ -145,6 +150,10 @@ void sgw_state_operational(ogs_fsm_t *s, sgw_event_t *e)
         ogs_assert(pkbuf);
         rv = ogs_gtp_parse_msg(&message, pkbuf);
         ogs_assert(rv == OGS_OK);
+
+        addr = e->addr;
+        ogs_assert(addr);
+        ogs_free(e->addr);
 
         sess = sgw_sess_find_by_teid(message.h.teid);
         ogs_assert(sess);

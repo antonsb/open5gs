@@ -418,6 +418,10 @@ void mme_state_operational(ogs_fsm_t *s, mme_event_t *e)
         rv = ogs_gtp_parse_msg(&gtp_message, pkbuf);
         ogs_assert(rv == OGS_OK);
 
+        addr = e->addr;
+        ogs_assert(addr);
+        ogs_free(e->addr);
+
         mme_ue = mme_ue_find_by_teid(gtp_message.h.teid);
         ogs_assert(mme_ue);
 

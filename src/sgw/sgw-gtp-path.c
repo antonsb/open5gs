@@ -31,16 +31,17 @@ static void _gtpv2_c_recv_cb(short when, ogs_socket_t fd, void *data)
     ogs_gtp_header_t *gtp_h = NULL;
     uint32_t teid = 0;
     ogs_pkbuf_t *pkbuf = NULL;
+    ogs_sockaddr_t from;
 
     ogs_assert(fd != INVALID_SOCKET);
 
     pkbuf = ogs_pkbuf_alloc(NULL, OGS_MAX_SDU_LEN);
     ogs_pkbuf_put(pkbuf, OGS_MAX_SDU_LEN);
 
-    size = ogs_recv(fd, pkbuf->data, pkbuf->len, 0);
+    size = ogs_recvfrom(fd, pkbuf->data, pkbuf->len, 0, &from);
     if (size <= 0) {
         ogs_log_message(OGS_LOG_ERROR, ogs_socket_errno,
-                "ogs_recv() failed");
+                "ogs_recvfrom() failed");
         ogs_pkbuf_free(pkbuf);
         return;
     }
@@ -59,10 +60,15 @@ static void _gtpv2_c_recv_cb(short when, ogs_socket_t fd, void *data)
     ogs_assert(e);
     e->pkbuf = pkbuf;
 
+    e->addr = ogs_calloc(1, sizeof(ogs_sockaddr_t));
+    ogs_assert(e->addr);
+    memcpy(e->addr, &from, sizeof(ogs_sockaddr_t));
+
     rv = ogs_queue_push(sgw_self()->queue, e);
     if (rv != OGS_OK) {
         ogs_error("ogs_queue_push() failed:%d", (int)rv);
         ogs_pkbuf_free(e->pkbuf);
+        ogs_free(e->addr);
         sgw_event_free(e);
     }
 }
