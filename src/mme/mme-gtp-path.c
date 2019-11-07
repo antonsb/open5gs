@@ -51,6 +51,8 @@ static void _gtpv2_c_recv_cb(short when, ogs_socket_t fd, void *data)
     ogs_assert(e);
     e->pkbuf = pkbuf;
 
+    e->sock = data;
+    ogs_assert(e->sock);
     e->addr = ogs_calloc(1, sizeof(ogs_sockaddr_t));
     ogs_assert(e->addr);
     memcpy(e->addr, &from, sizeof(ogs_sockaddr_t));
@@ -76,14 +78,14 @@ int mme_gtp_open(void)
         ogs_assert(sock);
 
         node->poll = ogs_pollset_add(mme_self()->pollset,
-                OGS_POLLIN, sock->fd, _gtpv2_c_recv_cb, NULL);
+                OGS_POLLIN, sock->fd, _gtpv2_c_recv_cb, sock);
     }
     ogs_list_for_each(&mme_self()->gtpc_list6, node) {
         sock = ogs_gtp_server(node);
         ogs_assert(sock);
 
         node->poll = ogs_pollset_add(mme_self()->pollset,
-                OGS_POLLIN, sock->fd, _gtpv2_c_recv_cb, NULL);
+                OGS_POLLIN, sock->fd, _gtpv2_c_recv_cb, sock);
     }
 
     mme_self()->gtpc_sock = ogs_gtp_local_sock_first(&mme_self()->gtpc_list);

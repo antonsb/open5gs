@@ -44,6 +44,7 @@ typedef struct sgw_event_s {
     int id;
     ogs_pkbuf_t *pkbuf;
 
+    ogs_sock_t *sock;
     ogs_sockaddr_t *addr;
 
     sgw_bearer_t *bearer;

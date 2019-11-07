@@ -44,6 +44,7 @@ typedef struct pgw_event_s {
     ogs_pkbuf_t *gtpbuf;
     ogs_pkbuf_t *gxbuf;
 
+    ogs_sock_t *sock;
     ogs_sockaddr_t *addr;
 
     pgw_sess_t *sess;
