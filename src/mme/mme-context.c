@@ -1717,7 +1717,7 @@ ogs_sockaddr_t *mme_pgw_addr_find_by_apn(
 
     ogs_list_for_each(list, pgw) {
         ogs_assert(pgw->node);
-        ogs_sockaddr_t *addr = pgw->node->addr;
+        ogs_sockaddr_t *addr = pgw->node->sa_list;
 
         while (addr) {
             if (addr->ogs_sa_family == family &&

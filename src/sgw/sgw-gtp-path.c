@@ -156,7 +156,7 @@ static void _gtpv1_u_recv_cb(short when, ogs_socket_t fd, void *data)
             ogs_assert(s5u_tunnel->gnode);
             ogs_assert(s5u_tunnel->gnode->sock);
             ogs_debug("[SGW] SEND GPU-U to PGW[%s]: TEID[0x%x]",
-                OGS_ADDR(&s5u_tunnel->gnode->conn, buf),
+                OGS_ADDR(&s5u_tunnel->gnode->remote_addr, buf),
                 s5u_tunnel->remote_teid);
 
             gtp_h->teid = htonl(s5u_tunnel->remote_teid);
@@ -173,7 +173,7 @@ static void _gtpv1_u_recv_cb(short when, ogs_socket_t fd, void *data)
             ogs_assert(indirect_tunnel->gnode);
             ogs_assert(indirect_tunnel->gnode->sock);
             ogs_debug("[SGW] SEND GPU-U to Indirect Tunnel[%s]: TEID[0x%x]",
-                OGS_ADDR(&indirect_tunnel->gnode->conn, buf),
+                OGS_ADDR(&indirect_tunnel->gnode->remote_addr, buf),
                 indirect_tunnel->remote_teid);
 
             gtp_h->teid = htonl(indirect_tunnel->remote_teid);
@@ -188,7 +188,7 @@ static void _gtpv1_u_recv_cb(short when, ogs_socket_t fd, void *data)
                 ogs_assert(s1u_tunnel->gnode);
                 ogs_assert(s1u_tunnel->gnode->sock);
                 ogs_debug("[SGW] SEND GPU-U to ENB[%s]: TEID[0x%x]",
-                    OGS_ADDR(&s1u_tunnel->gnode->conn, buf),
+                    OGS_ADDR(&s1u_tunnel->gnode->remote_addr, buf),
                     s1u_tunnel->remote_teid);
 
                 /* If there is buffered packet, send it first */
@@ -339,7 +339,7 @@ int sgw_gtp_send_end_marker(sgw_tunnel_t *s1u_tunnel)
     ogs_assert(s1u_tunnel->gnode->sock);
 
     ogs_debug("[SGW] SEND End Marker to ENB[%s]: TEID[0x%x]",
-        OGS_ADDR(&s1u_tunnel->gnode->conn, buf),
+        OGS_ADDR(&s1u_tunnel->gnode->remote_addr, buf),
         s1u_tunnel->remote_teid);
 
     pkbuf = ogs_pkbuf_alloc(NULL,

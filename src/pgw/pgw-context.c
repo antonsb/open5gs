@@ -874,7 +874,7 @@ ogs_gtp_node_t *pgw_sgw_add_by_message(ogs_gtp_message_t *message)
 
     sgw_s5c_teid = req->sender_f_teid_for_control_plane.data;
     ogs_assert(sgw_s5c_teid);
-    sgw = ogs_gtp_node_find(&pgw_self()->sgw_s5c_list, sgw_s5c_teid);
+    sgw = ogs_gtp_node_find_by_f_teid(&pgw_self()->sgw_s5c_list, sgw_s5c_teid);
     if (!sgw) {
         sgw = ogs_gtp_node_add(&pgw_self()->sgw_s5c_list, sgw_s5c_teid,
             pgw_self()->gtpc_port,

@@ -122,7 +122,7 @@ void sgw_s11_handle_create_session_request(ogs_gtp_xact_t *s11_xact,
     pgw_s5c_teid = req->pgw_s5_s8_address_for_control_plane_or_pmip.data;
     ogs_assert(pgw_s5c_teid);
 
-    pgw = ogs_gtp_node_find(&sgw_self()->pgw_s5c_list, pgw_s5c_teid);
+    pgw = ogs_gtp_node_find_by_f_teid(&sgw_self()->pgw_s5c_list, pgw_s5c_teid);
     if (!pgw) {
         pgw = ogs_gtp_node_add(&sgw_self()->pgw_s5c_list, pgw_s5c_teid,
             sgw_self()->gtpc_port,
@@ -240,7 +240,8 @@ void sgw_s11_handle_modify_bearer_request(ogs_gtp_xact_t *s11_xact,
         ogs_debug("    ENB_S1U_TEID[%d] SGW_S1U_TEID[%d]",
             s1u_tunnel->remote_teid, s1u_tunnel->local_teid);
 
-        enb = ogs_gtp_node_find(&sgw_self()->enb_s1u_list, enb_s1u_teid);
+        enb = ogs_gtp_node_find_by_f_teid(
+                &sgw_self()->enb_s1u_list, enb_s1u_teid);
         if (!enb) {
             enb = ogs_gtp_node_add(&sgw_self()->enb_s1u_list, enb_s1u_teid,
                 sgw_self()->gtpu_port,
@@ -303,7 +304,7 @@ void sgw_s11_handle_modify_bearer_request(ogs_gtp_xact_t *s11_xact,
             ogs_assert(s1u_tunnel->gnode->sock);
 
             ogs_debug("[SGW] SEND End Marker to ENB[%s]: TEID[0x%x]",
-                OGS_ADDR(&s1u_tunnel->gnode->conn, buf),
+                OGS_ADDR(&s1u_tunnel->gnode->remote_addr, buf),
                 s1u_tunnel->remote_teid);
             rv = sgw_gtp_send_end_marker(s1u_tunnel);
             if (rv != OGS_OK)
@@ -453,7 +454,7 @@ void sgw_s11_handle_create_bearer_response(ogs_gtp_xact_t *s11_xact,
     ogs_debug("    SGW_S5U_TEID[%d] PGW_S5U_TEID[%d]",
         s5u_tunnel->local_teid, s5u_tunnel->remote_teid);
 
-    enb = ogs_gtp_node_find(&sgw_self()->enb_s1u_list, enb_s1u_teid);
+    enb = ogs_gtp_node_find_by_f_teid(&sgw_self()->enb_s1u_list, enb_s1u_teid);
     if (!enb) {
         enb = ogs_gtp_node_add(&sgw_self()->enb_s1u_list, enb_s1u_teid,
             sgw_self()->gtpu_port,
@@ -811,7 +812,8 @@ void sgw_s11_handle_create_indirect_data_forwarding_tunnel_request(
             ogs_assert(tunnel);
 
             tunnel->remote_teid = ntohl(req_teid->teid);
-            enb = ogs_gtp_node_find(&sgw_self()->enb_s1u_list, req_teid);
+            enb = ogs_gtp_node_find_by_f_teid(
+                    &sgw_self()->enb_s1u_list, req_teid);
             if (!enb) {
                 enb = ogs_gtp_node_add(&sgw_self()->enb_s1u_list, req_teid,
                     sgw_self()->gtpu_port,
@@ -850,7 +852,8 @@ void sgw_s11_handle_create_indirect_data_forwarding_tunnel_request(
             ogs_assert(tunnel);
 
             tunnel->remote_teid = ntohl(req_teid->teid);
-            enb = ogs_gtp_node_find(&sgw_self()->enb_s1u_list, req_teid);
+            enb = ogs_gtp_node_find_by_f_teid(
+                    &sgw_self()->enb_s1u_list, req_teid);
             if (!enb) {
                 enb = ogs_gtp_node_add(&sgw_self()->enb_s1u_list, req_teid,
                     sgw_self()->gtpu_port,

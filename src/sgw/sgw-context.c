@@ -410,7 +410,7 @@ ogs_gtp_node_t *sgw_mme_add_by_message(ogs_gtp_message_t *message)
 
     mme_s11_teid = req->sender_f_teid_for_control_plane.data;
     ogs_assert(mme_s11_teid);
-    mme = ogs_gtp_node_find(&sgw_self()->mme_s11_list, mme_s11_teid);
+    mme = ogs_gtp_node_find_by_f_teid(&sgw_self()->mme_s11_list, mme_s11_teid);
     if (!mme) {
         mme = ogs_gtp_node_add(&sgw_self()->mme_s11_list, mme_s11_teid,
             sgw_self()->gtpc_port,
