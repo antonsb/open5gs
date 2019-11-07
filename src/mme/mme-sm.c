@@ -420,19 +420,54 @@ void mme_state_operational(ogs_fsm_t *s, mme_event_t *e)
         rv = ogs_gtp_parse_msg(&gtp_message, pkbuf);
         ogs_assert(rv == OGS_OK);
 
-        if (gtp_message.h.teid) {
+        /* 
+         * 5.5.2 in spec 29.274
+         *
+         * If a peer's TEID is not available, the TEID field still shall be
+         * present in the header and its value shall be set to "0" in the
+         * following messages:
+         *
+         * - Create Session Request message on S2a/S2b/S5/S8
+         *
+         * - Create Session Request message on S4/S11, if for a given UE,
+         *   the SGSN/MME has not yet obtained the Control TEID of the SGW.
+         *
+         * - If a node receives a message and the TEID-C in the GTPv2 header of
+         *   the received message is not known, it shall respond with
+         *   "Context not found" Cause in the corresponding response message
+         *   to the sender, the TEID used in the GTPv2-C header in the response
+         *   message shall be then set to zero.
+         *
+         * - If a node receives a request message containing protocol error,
+         *   e.g. Mandatory IE missing, which requires the receiver to reject
+         *   the message as specified in clause 7.7, it shall reject
+         *   the request message. For the response message, the node should
+         *   look up the remote peer's TEID and accordingly set the GTPv2-C
+         *   header TEID and the message cause code. As an implementation
+         *   option, the node may not look up the remote peer's TEID and
+         *   set the GTPv2-C header TEID to zero in the response message.
+         *   However in this case, the cause code shall not be set to
+         *   "Context not found".
+         */
+        if (gtp_message.h.teid != 0) {
+            /* Cause is not "Context not found" */
             mme_ue = mme_ue_find_by_teid(gtp_message.h.teid);
         }
+
         if (mme_ue) {
             gnode = mme_ue->gnode;
+            ogs_assert(gnode);
+
         } else {
             ogs_assert(e->addr);
+
             sgw = mme_sgw_find_by_addr(e->addr);
             ogs_assert(sgw);
+
             gnode = sgw->gnode;
+            ogs_assert(gnode);
         }
         ogs_free(e->addr);
-        ogs_assert(gnode);
 
         rv = ogs_gtp_xact_receive(gnode, &gtp_message.h, &xact);
         if (rv != OGS_OK) {

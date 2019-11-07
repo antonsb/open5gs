@@ -60,6 +60,8 @@ void ogs_gtp_node_free(ogs_gtp_node_t *node);
 ogs_gtp_node_t *ogs_gtp_node_add(
         ogs_list_t *list, ogs_gtp_f_teid_t *f_teid,
         uint16_t port, int no_ipv4, int no_ipv6, int prefer_ipv4);
+ogs_gtp_node_t *ogs_gtp_node_add_by_addr(
+        ogs_list_t *list, ogs_sockaddr_t *addr);
 void ogs_gtp_node_remove(ogs_list_t *list, ogs_gtp_node_t *node);
 void ogs_gtp_node_remove_all(ogs_list_t *list);
 

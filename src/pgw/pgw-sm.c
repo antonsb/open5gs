@@ -53,7 +53,6 @@ void pgw_state_operational(ogs_fsm_t *s, pgw_event_t *e)
     ogs_pkbuf_t *gxbuf = NULL;
     ogs_diam_gx_message_t *gx_message = NULL;
     ogs_pkbuf_t *gtpbuf = NULL;
-    ogs_sockaddr_t *addr = NULL;
 
     pgw_sm_debug(e);
 
@@ -82,8 +81,7 @@ void pgw_state_operational(ogs_fsm_t *s, pgw_event_t *e)
         rv = ogs_gtp_parse_msg(message, recvbuf);
         ogs_assert(rv == OGS_OK);
 
-        addr = e->addr;
-        ogs_assert(addr);
+        ogs_assert(e->addr);
         ogs_free(e->addr);
 
         if (message->h.teid == 0) {

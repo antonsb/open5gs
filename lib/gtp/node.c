@@ -96,6 +96,26 @@ ogs_gtp_node_t *ogs_gtp_node_add(ogs_list_t *list, ogs_gtp_f_teid_t *f_teid,
     return node;
 }
 
+ogs_gtp_node_t *ogs_gtp_node_add_by_addr(
+        ogs_list_t *list, ogs_sockaddr_t *addr)
+{
+    ogs_gtp_node_t *gnode = NULL;
+    ogs_sockaddr_t *new = NULL;
+
+    ogs_assert(list);
+    ogs_assert(addr);
+
+    ogs_copyaddrinfo(&new, addr);
+    gnode = ogs_gtp_node_new(new);
+
+    ogs_assert(gnode);
+    memcpy(&gnode->remote_addr, new, sizeof gnode->remote_addr);
+
+    ogs_list_add(list, gnode);
+
+    return gnode;
+}
+
 void ogs_gtp_node_remove(ogs_list_t *list, ogs_gtp_node_t *node)
 {
     ogs_assert(node);
