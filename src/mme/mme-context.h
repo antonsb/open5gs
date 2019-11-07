@@ -173,13 +173,13 @@ typedef struct mme_sgw_s {
     uint16_t        tac[OGS_MAX_NUM_OF_TAI];
     uint8_t         num_of_tac;
 
-    ogs_gtp_node_t  *node;
+    ogs_gtp_node_t  *gnode;
 } mme_sgw_t;
 
 typedef struct mme_pgw_s {
     ogs_lnode_t     lnode;
 
-    ogs_gtp_node_t  *node;
+    ogs_gtp_node_t  *gnode;
     const char      *apn;
 } mme_pgw_t;
 
