@@ -505,9 +505,8 @@ void sgw_s11_handle_create_bearer_response(ogs_gtp_xact_t *s11_xact,
     ogs_assert(s5c_xact);
 
     ogs_debug("[SGW] Cerate Bearer Reqeust");
-    req = &message->create_bearer_response;
-    ogs_assert(req);
 
+    req = &message->create_bearer_response;
     if (req->bearer_contexts.presence == 0) {
         ogs_error("No Bearer");
         return;
@@ -850,15 +849,17 @@ void sgw_s11_handle_downlink_data_notification_ack(
         ogs_gtp_downlink_data_notification_acknowledge_t *ack)
 {
     int rv;
-    ogs_assert(sgw_ue);
     ogs_assert(s11_xact);
 
     ogs_debug("[SGW] Downlink Data Notification Acknowledge");
-    ogs_debug("    MME_S11_TEID[%d] SGW_S11_TEID[%d]",
-        sgw_ue->mme_s11_teid, sgw_ue->sgw_s11_teid);
 
     rv = ogs_gtp_xact_commit(s11_xact);
     ogs_assert(rv == OGS_OK);
+
+    ogs_assert(sgw_ue);
+    ogs_debug("    MME_S11_TEID[%d] SGW_S11_TEID[%d]",
+        sgw_ue->mme_s11_teid, sgw_ue->sgw_s11_teid);
+
 }
 
 void sgw_s11_handle_create_indirect_data_forwarding_tunnel_request(
@@ -883,26 +884,20 @@ void sgw_s11_handle_create_indirect_data_forwarding_tunnel_request(
     ogs_gtp_f_teid_t rsp_ul_teid[GTP_MAX_NUM_OF_INDIRECT_TUNNEL];
     int len;
 
-    ogs_assert(sgw_ue);
     ogs_assert(s11_xact);
     ogs_assert(req);
 
     ogs_debug("[SGW] Create Indirect Data Forwarding Tunnel Request");
-    ogs_debug("    MME_S11_TEID[%d] SGW_S11_TEID[%d]",
-        sgw_ue->mme_s11_teid, sgw_ue->sgw_s11_teid);
 
     rsp = &message.create_indirect_data_forwarding_tunnel_response;
     memset(&message, 0, sizeof(ogs_gtp_message_t));
 
+    ogs_assert(sgw_ue);
+    ogs_debug("    MME_S11_TEID[%d] SGW_S11_TEID[%d]",
+        sgw_ue->mme_s11_teid, sgw_ue->sgw_s11_teid);
+
     ogs_gtp_bearers_in_create_indirect_tunnel_request(&req_bearers, req);
     ogs_gtp_bearers_in_create_indirect_tunnel_response(&rsp_bearers, rsp);
-
-    memset(&cause, 0, sizeof(cause));
-    cause.value = OGS_GTP_CAUSE_REQUEST_ACCEPTED;
-
-    rsp->cause.presence = 1;
-    rsp->cause.data = &cause;
-    rsp->cause.len = sizeof(cause);
 
     for (i = 0; req_bearers[i]->presence; i++) {
         if (req_bearers[i]->eps_bearer_id.presence == 0) {
@@ -1001,6 +996,12 @@ void sgw_s11_handle_create_indirect_data_forwarding_tunnel_request(
         }
     }
 
+    memset(&cause, 0, sizeof(cause));
+    cause.value = OGS_GTP_CAUSE_REQUEST_ACCEPTED;
+    rsp->cause.presence = 1;
+    rsp->cause.data = &cause;
+    rsp->cause.len = sizeof(cause);
+
     message.h.type =
         OGS_GTP_CREATE_INDIRECT_DATA_FORWARDING_TUNNEL_RESPONSE_TYPE;
     message.h.teid = sgw_ue->mme_s11_teid;
@@ -1029,10 +1030,14 @@ void sgw_s11_handle_delete_indirect_data_forwarding_tunnel_request(
     
     ogs_gtp_cause_t cause;
 
-    ogs_assert(sgw_ue);
     ogs_assert(s11_xact);
 
     ogs_debug("[SGW] Delete Indirect Data Forwarding Tunnel Request");
+
+    rsp = &message.delete_indirect_data_forwarding_tunnel_response;
+    memset(&message, 0, sizeof(ogs_gtp_message_t));
+
+    ogs_assert(sgw_ue);
     ogs_debug("    MME_S11_TEID[%d] SGW_S11_TEID[%d]",
         sgw_ue->mme_s11_teid, sgw_ue->sgw_s11_teid);
 
@@ -1061,12 +1066,8 @@ void sgw_s11_handle_delete_indirect_data_forwarding_tunnel_request(
         sess = sgw_sess_next(sess);
     }
 
-    rsp = &message.delete_indirect_data_forwarding_tunnel_response;
-    memset(&message, 0, sizeof(ogs_gtp_message_t));
-
     memset(&cause, 0, sizeof(cause));
     cause.value = OGS_GTP_CAUSE_REQUEST_ACCEPTED;
-
     rsp->cause.presence = 1;
     rsp->cause.data = &cause;
     rsp->cause.len = sizeof(cause);
