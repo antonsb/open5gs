@@ -795,11 +795,13 @@ sgw_tunnel_t *sgw_tunnel_find_by_interface_type(
 
 sgw_tunnel_t *sgw_s1u_tunnel_in_bearer(sgw_bearer_t *bearer)
 {
+    ogs_assert(bearer);
     return sgw_tunnel_find_by_interface_type(
             bearer, OGS_GTP_F_TEID_S1_U_SGW_GTP_U);
 }
 sgw_tunnel_t *sgw_s5u_tunnel_in_bearer(sgw_bearer_t *bearer)
 {
+    ogs_assert(bearer);
     return sgw_tunnel_find_by_interface_type(
             bearer, OGS_GTP_F_TEID_S5_S8_SGW_GTP_U);
 }
