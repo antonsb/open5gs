@@ -27,6 +27,7 @@ static void send_error_message(
 {
     int rv;
     ogs_gtp_message_t errmsg;
+    ogs_tlv_cause_t *tlv = NULL;
     ogs_gtp_cause_t cause;
     ogs_pkbuf_t *pkbuf = NULL;
 
@@ -34,34 +35,31 @@ static void send_error_message(
     errmsg.h.type = type;
     if (sgw_ue) errmsg.h.teid = sgw_ue->mme_s11_teid;
 
-    memset(&cause, 0, sizeof cause);
-    cause.value = value;
-
     switch (type) {
     case OGS_GTP_CREATE_SESSION_RESPONSE_TYPE:
-        errmsg.create_session_response.cause.presence = 1;
-        errmsg.create_session_response.cause.len = sizeof(cause);
-        errmsg.create_session_response.cause.data = &cause;
+        tlv = &errmsg.create_session_response.cause;
         break;
     case OGS_GTP_MODIFY_BEARER_RESPONSE_TYPE:
-        errmsg.modify_bearer_response.cause.presence = 1;
-        errmsg.modify_bearer_response.cause.len = sizeof(cause);
-        errmsg.modify_bearer_response.cause.data = &cause;
+        tlv = &errmsg.modify_bearer_response.cause;
         break;
     case OGS_GTP_DELETE_SESSION_RESPONSE_TYPE:
-        errmsg.delete_session_response.cause.presence = 1;
-        errmsg.delete_session_response.cause.len = sizeof(cause);
-        errmsg.delete_session_response.cause.data = &cause;
+        tlv = &errmsg.delete_session_response.cause;
         break;
     case OGS_GTP_RELEASE_ACCESS_BEARERS_RESPONSE_TYPE:
-        errmsg.release_access_bearers_response.cause.presence = 1;
-        errmsg.release_access_bearers_response.cause.len = sizeof(cause);
-        errmsg.release_access_bearers_response.cause.data = &cause;
+        tlv = &errmsg.release_access_bearers_response.cause;
         break;
     default:
         ogs_assert_if_reached();
         return;
     }
+    
+    ogs_assert(tlv);
+
+    memset(&cause, 0, sizeof cause);
+    cause.value = value;
+    tlv->presence = 1;
+    tlv->len = sizeof(cause);
+    tlv->data = &cause;
 
     rv = ogs_gtp_build_msg(&pkbuf, &errmsg);
     ogs_assert(rv == OGS_OK);
