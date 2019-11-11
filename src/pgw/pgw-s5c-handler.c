@@ -20,6 +20,7 @@
 #include "pgw-event.h"
 #include "pgw-context.h"
 #include "pgw-gtp-path.h"
+#include "pgw-fd-path.h"
 #include "pgw-s5c-handler.h"
 
 #define SEND_ERROR_MESSAGE(XACT, SESS, TYPE, CAUSE) \
@@ -28,7 +29,7 @@
 
 void pgw_s5c_handle_create_session_request(
         pgw_sess_t *sess, ogs_gtp_xact_t *xact,
-        ogs_gtp_create_session_request_t *req)
+        ogs_pkbuf_t *gtpbuf, ogs_gtp_create_session_request_t *req)
 {
     int rv;
     ogs_gtp_f_teid_t *sgw_s5c_teid, *sgw_s5u_teid;
@@ -159,11 +160,14 @@ void pgw_s5c_handle_create_session_request(
     sess->tai.tac = uli.tai.tac;
     memcpy(&sess->e_cgi.plmn_id, &uli.e_cgi.plmn_id, sizeof(uli.e_cgi.plmn_id));
     sess->e_cgi.cell_id = uli.e_cgi.cell_id;
+
+    pgw_gx_send_ccr(sess, xact, gtpbuf,
+        OGS_DIAM_GX_CC_REQUEST_TYPE_INITIAL_REQUEST);
 }
 
 void pgw_s5c_handle_delete_session_request(
         pgw_sess_t *sess, ogs_gtp_xact_t *xact,
-        ogs_gtp_delete_session_request_t *req)
+        ogs_pkbuf_t *gtpbuf, ogs_gtp_delete_session_request_t *req)
 {
     ogs_debug("[PGW] Delete Session Request");
 
@@ -180,6 +184,9 @@ void pgw_s5c_handle_delete_session_request(
 
     ogs_debug("    SGW_S5C_TEID[0x%x] PGW_S5C_TEID[0x%x]",
             sess->sgw_s5c_teid, sess->pgw_s5c_teid);
+
+    pgw_gx_send_ccr(sess, xact, gtpbuf,
+        OGS_DIAM_GX_CC_REQUEST_TYPE_TERMINATION_REQUEST);
 }
 
 void pgw_s5c_handle_create_bearer_response(

@@ -194,6 +194,11 @@ void mme_s11_handle_delete_session_response(
     rv = ogs_gtp_xact_commit(xact);
     ogs_assert(rv == OGS_OK);
 
+    sess = OGS_GTP_XACT_RETRIEVE_SESSION(xact);
+    ogs_assert(sess);
+    mme_ue = sess->mme_ue;
+    ogs_assert(mme_ue);
+
     if (rsp->cause.presence == 0) {
         ogs_error("No Cause");
         goto cleanup;
@@ -205,11 +210,6 @@ void mme_s11_handle_delete_session_response(
         ogs_warn("No Accept [%d]", cause->value);
         goto cleanup;
     }
-
-    sess = OGS_GTP_XACT_RETRIEVE_SESSION(xact);
-    ogs_assert(sess);
-    mme_ue = sess->mme_ue;
-    ogs_assert(mme_ue);
 
     ogs_debug("    MME_S11_TEID[%d] SGW_S11_TEID[%d]",
             mme_ue->mme_s11_teid, mme_ue->sgw_s11_teid);
