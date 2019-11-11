@@ -27,8 +27,8 @@ static void send_error_message(
 {
     int rv;
     ogs_gtp_message_t errmsg;
-    ogs_tlv_cause_t *tlv = NULL;
     ogs_gtp_cause_t cause;
+    ogs_tlv_cause_t *tlv = NULL;
     ogs_pkbuf_t *pkbuf = NULL;
 
     memset(&errmsg, 0, sizeof(ogs_gtp_message_t));
