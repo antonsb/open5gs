@@ -167,6 +167,9 @@ void pgw_s5c_handle_delete_session_request(
 {
     ogs_debug("[PGW] Delete Session Request");
 
+    ogs_assert(xact);
+    ogs_assert(req);
+
     if (!sess) {
         ogs_warn("No Context");
         SEND_ERROR_MESSAGE(xact, sess,
