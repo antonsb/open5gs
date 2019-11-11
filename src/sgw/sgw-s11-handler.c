@@ -22,56 +22,9 @@
 #include "sgw-gtp-path.h"
 #include "sgw-s11-handler.h"
 
-static void send_error_message(
-        ogs_gtp_xact_t *xact, sgw_ue_t *sgw_ue, int type, int value)
-{
-    int rv;
-    ogs_gtp_message_t errmsg;
-    ogs_gtp_cause_t cause;
-    ogs_tlv_cause_t *tlv = NULL;
-    ogs_pkbuf_t *pkbuf = NULL;
-
-    memset(&errmsg, 0, sizeof(ogs_gtp_message_t));
-    errmsg.h.type = type;
-    if (sgw_ue) errmsg.h.teid = sgw_ue->mme_s11_teid;
-
-    switch (type) {
-    case OGS_GTP_CREATE_SESSION_RESPONSE_TYPE:
-        tlv = &errmsg.create_session_response.cause;
-        break;
-    case OGS_GTP_MODIFY_BEARER_RESPONSE_TYPE:
-        tlv = &errmsg.modify_bearer_response.cause;
-        break;
-    case OGS_GTP_DELETE_SESSION_RESPONSE_TYPE:
-        tlv = &errmsg.delete_session_response.cause;
-        break;
-    case OGS_GTP_RELEASE_ACCESS_BEARERS_RESPONSE_TYPE:
-        tlv = &errmsg.release_access_bearers_response.cause;
-        break;
-    default:
-        ogs_assert_if_reached();
-        return;
-    }
-    
-    ogs_assert(tlv);
-
-    memset(&cause, 0, sizeof cause);
-    cause.value = value;
-    tlv->presence = 1;
-    tlv->len = sizeof(cause);
-    tlv->data = &cause;
-
-    rv = ogs_gtp_build_msg(&pkbuf, &errmsg);
-    ogs_assert(rv == OGS_OK);
-
-    rv = ogs_gtp_xact_update_tx(xact, &errmsg.h, pkbuf);
-    ogs_assert(rv == OGS_OK);
-
-    rv = ogs_gtp_xact_commit(xact);
-    ogs_assert(rv == OGS_OK);
-
-    return;
-}
+#define SEND_ERROR_MESSAGE(XACT, SGW_UE, TYPE, CAUSE) \
+    ogs_gtp_send_error_message( \
+        (XACT), ((SGW_UE) ? ((SGW_UE)->mme_s11_teid) : 0), (TYPE), (CAUSE))
 
 void sgw_s11_handle_create_session_request(ogs_gtp_xact_t *s11_xact,
         sgw_ue_t *sgw_ue, ogs_gtp_message_t *message)
@@ -102,49 +55,49 @@ void sgw_s11_handle_create_session_request(ogs_gtp_xact_t *s11_xact,
     req = &message->create_session_request;
     if (req->imsi.presence == 0) {
         ogs_error("No IMSI");
-        send_error_message(s11_xact, sgw_ue,
+        SEND_ERROR_MESSAGE(s11_xact, sgw_ue,
                 OGS_GTP_CREATE_SESSION_RESPONSE_TYPE, 
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
         return;
     }
     if (req->bearer_contexts_to_be_created.presence == 0) {
         ogs_error("No Bearer");
-        send_error_message(s11_xact, sgw_ue,
+        SEND_ERROR_MESSAGE(s11_xact, sgw_ue,
                 OGS_GTP_CREATE_SESSION_RESPONSE_TYPE, 
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
         return;
     }
     if (req->bearer_contexts_to_be_created.eps_bearer_id.presence == 0) {
         ogs_error("No EPS Bearer ID");
-        send_error_message(s11_xact, sgw_ue,
+        SEND_ERROR_MESSAGE(s11_xact, sgw_ue,
                 OGS_GTP_CREATE_SESSION_RESPONSE_TYPE, 
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
         return;
     }
     if (req->access_point_name.presence == 0) {
         ogs_error("No APN");
-        send_error_message(s11_xact, sgw_ue,
+        SEND_ERROR_MESSAGE(s11_xact, sgw_ue,
                 OGS_GTP_CREATE_SESSION_RESPONSE_TYPE, 
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
         return;
     }
     if (req->sender_f_teid_for_control_plane.presence == 0) {
         ogs_error("No Sender F-TEID");
-        send_error_message(s11_xact, sgw_ue,
+        SEND_ERROR_MESSAGE(s11_xact, sgw_ue,
                 OGS_GTP_CREATE_SESSION_RESPONSE_TYPE, 
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
         return;
     }
     if (req->pgw_s5_s8_address_for_control_plane_or_pmip.presence == 0) {
         ogs_error("No PGW IP");
-        send_error_message(s11_xact, sgw_ue,
+        SEND_ERROR_MESSAGE(s11_xact, sgw_ue,
                 OGS_GTP_CREATE_SESSION_RESPONSE_TYPE, 
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
         return;
     }
     if (req->user_location_information.presence == 0) {
         ogs_error("No User Location Inforamtion");
-        send_error_message(s11_xact, sgw_ue,
+        SEND_ERROR_MESSAGE(s11_xact, sgw_ue,
                 OGS_GTP_CREATE_SESSION_RESPONSE_TYPE, 
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
         return;
@@ -152,7 +105,7 @@ void sgw_s11_handle_create_session_request(ogs_gtp_xact_t *s11_xact,
 
     if (!sgw_ue) {
         ogs_warn("No Context");
-        send_error_message(s11_xact, sgw_ue,
+        SEND_ERROR_MESSAGE(s11_xact, sgw_ue,
                 OGS_GTP_CREATE_SESSION_RESPONSE_TYPE, 
                 OGS_GTP_CAUSE_CONTEXT_NOT_FOUND);
         return;
@@ -279,21 +232,21 @@ void sgw_s11_handle_modify_bearer_request(ogs_gtp_xact_t *s11_xact,
 
     if (req->bearer_contexts_to_be_modified.presence == 0) {
         ogs_error("No Bearer");
-        send_error_message(s11_xact, sgw_ue,
+        SEND_ERROR_MESSAGE(s11_xact, sgw_ue,
                 OGS_GTP_MODIFY_BEARER_RESPONSE_TYPE, 
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
         return;
     }
     if (req->bearer_contexts_to_be_modified.eps_bearer_id.presence == 0) {
         ogs_error("No EPS Bearer ID");
-        send_error_message(s11_xact, sgw_ue,
+        SEND_ERROR_MESSAGE(s11_xact, sgw_ue,
                 OGS_GTP_MODIFY_BEARER_RESPONSE_TYPE, 
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
         return;
     }
     if (req->bearer_contexts_to_be_modified.s1_u_enodeb_f_teid.presence == 0) {
         ogs_error("No eNB TEID");
-        send_error_message(s11_xact, sgw_ue,
+        SEND_ERROR_MESSAGE(s11_xact, sgw_ue,
                 OGS_GTP_MODIFY_BEARER_RESPONSE_TYPE, 
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
         return;
@@ -306,7 +259,7 @@ void sgw_s11_handle_modify_bearer_request(ogs_gtp_xact_t *s11_xact,
     } 
     if (!bearer) {
         ogs_warn("No Context");
-        send_error_message(s11_xact, sgw_ue,
+        SEND_ERROR_MESSAGE(s11_xact, sgw_ue,
                 OGS_GTP_MODIFY_BEARER_RESPONSE_TYPE, 
                 OGS_GTP_CAUSE_CONTEXT_NOT_FOUND);
         return;
@@ -441,7 +394,7 @@ void sgw_s11_handle_delete_session_request(ogs_gtp_xact_t *s11_xact,
     req = &message->delete_session_request;
     if (req->linked_eps_bearer_id.presence == 0) {
         ogs_error("No EPS Bearer ID");
-        send_error_message(s11_xact, sgw_ue,
+        SEND_ERROR_MESSAGE(s11_xact, sgw_ue,
                 OGS_GTP_DELETE_SESSION_RESPONSE_TYPE, 
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
         return;
@@ -449,7 +402,7 @@ void sgw_s11_handle_delete_session_request(ogs_gtp_xact_t *s11_xact,
 
     if (!sgw_ue) {
         ogs_warn("No Context");
-        send_error_message(s11_xact, sgw_ue,
+        SEND_ERROR_MESSAGE(s11_xact, sgw_ue,
                 OGS_GTP_DELETE_SESSION_RESPONSE_TYPE, 
                 OGS_GTP_CAUSE_CONTEXT_NOT_FOUND);
         return;
@@ -744,7 +697,7 @@ void sgw_s11_handle_release_access_bearers_request(ogs_gtp_xact_t *s11_xact,
 
     if (!sgw_ue) {
         ogs_warn("No Context");
-        send_error_message(s11_xact, sgw_ue,
+        SEND_ERROR_MESSAGE(s11_xact, sgw_ue,
                 OGS_GTP_RELEASE_ACCESS_BEARERS_RESPONSE_TYPE, 
                 OGS_GTP_CAUSE_CONTEXT_NOT_FOUND);
         return;
