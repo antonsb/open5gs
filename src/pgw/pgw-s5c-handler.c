@@ -50,6 +50,7 @@ void pgw_s5c_handle_create_session_request(
         SEND_ERROR_MESSAGE(xact, sess,
                 OGS_GTP_CREATE_SESSION_RESPONSE_TYPE,
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
+        ogs_pkbuf_free(gtpbuf);
         return;
     }
     if (req->sender_f_teid_for_control_plane.presence == 0) {
@@ -57,6 +58,7 @@ void pgw_s5c_handle_create_session_request(
         SEND_ERROR_MESSAGE(xact, sess,
                 OGS_GTP_CREATE_SESSION_RESPONSE_TYPE,
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
+        ogs_pkbuf_free(gtpbuf);
         return;
     }
     if (req->bearer_contexts_to_be_created.presence == 0) {
@@ -64,6 +66,7 @@ void pgw_s5c_handle_create_session_request(
         SEND_ERROR_MESSAGE(xact, sess,
                 OGS_GTP_CREATE_SESSION_RESPONSE_TYPE,
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
+        ogs_pkbuf_free(gtpbuf);
         return;
     }
     if (req->bearer_contexts_to_be_created.bearer_level_qos.presence == 0) {
@@ -71,6 +74,7 @@ void pgw_s5c_handle_create_session_request(
         SEND_ERROR_MESSAGE(xact, sess,
                 OGS_GTP_CREATE_SESSION_RESPONSE_TYPE,
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
+        ogs_pkbuf_free(gtpbuf);
         return;
     }
     if (req->bearer_contexts_to_be_created.s5_s8_u_sgw_f_teid.presence == 0) {
@@ -78,6 +82,7 @@ void pgw_s5c_handle_create_session_request(
         SEND_ERROR_MESSAGE(xact, sess,
                 OGS_GTP_CREATE_SESSION_RESPONSE_TYPE,
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
+        ogs_pkbuf_free(gtpbuf);
         return;
     }
     if (req->user_location_information.presence == 0) {
@@ -85,6 +90,7 @@ void pgw_s5c_handle_create_session_request(
         SEND_ERROR_MESSAGE(xact, sess,
                 OGS_GTP_CREATE_SESSION_RESPONSE_TYPE,
                 OGS_GTP_CAUSE_MANDATORY_IE_MISSING);
+        ogs_pkbuf_free(gtpbuf);
         return;
     }
 
@@ -179,6 +185,7 @@ void pgw_s5c_handle_delete_session_request(
         SEND_ERROR_MESSAGE(xact, sess,
                 OGS_GTP_DELETE_SESSION_RESPONSE_TYPE,
                 OGS_GTP_CAUSE_CONTEXT_NOT_FOUND);
+        ogs_pkbuf_free(gtpbuf);
         return;
     }
 
